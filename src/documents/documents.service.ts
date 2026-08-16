@@ -120,7 +120,8 @@ export class DocumentsService {
             sources: results.map( result => ({
                 chunkIndex: result.chunkIndex,
                 distance: Number( result.distance ),
-                filename: result.filename
+                filename: result.filename,
+                content: result.content
             }))
         }
 
