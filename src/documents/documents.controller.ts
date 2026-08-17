@@ -6,7 +6,7 @@ import { PdfService } from './pdf.service';
 import { SearchDocumentsDto } from './dto/search-documents.dto';
 import { AskDocumentsDto } from './dto/ask-documents.dto';
 
-@Controller('documents')
+@Controller('rag')
 export class DocumentsController {
 
 
