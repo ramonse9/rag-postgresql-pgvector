@@ -5,6 +5,7 @@ import { DocumentsService } from './documents.service';
 import { PdfService } from './pdf.service';
 import { SearchDocumentsDto } from './dto/search-documents.dto';
 import { AskDocumentsDto } from './dto/ask-documents.dto';
+import { LangchainDocumentsService } from './langchain-documents.service';
 
 @Controller('rag')
 export class DocumentsController {
@@ -12,6 +13,7 @@ export class DocumentsController {
 
     constructor(
         private readonly documentsService: DocumentsService,
+        private readonly langchaninDocumentsService: LangchainDocumentsService,
         private readonly pdfService: PdfService
     ){}
 
@@ -64,6 +66,14 @@ export class DocumentsController {
             dto.question,
             dto.topK
         )
+
+    }
+
+    @Post('langchain/ask')
+    async langchainAsk(
+        @Body('question') question: string 
+    ){
+        return await this.langchaninDocumentsService.ask( question )        
 
     }
 }

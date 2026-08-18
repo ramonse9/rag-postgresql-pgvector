@@ -9,6 +9,7 @@ import { ChunkingService } from './chunking.service';
 import { DocumentsController } from './documents.controller';
 import { OpenaiModule } from '../openai/openai.module';
 import { TextCleaningService } from './text-cleaning.service';
+import { LangchainDocumentsService } from './langchain-documents.service';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { TextCleaningService } from './text-cleaning.service';
     DocumentsService, 
     PdfService, 
     ChunkingService, 
-    TextCleaningService,
+    TextCleaningService, 
+    LangchainDocumentsService,
   ],
   controllers: [
     DocumentsController
