@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DocumentsModule } from './documents/documents.module';
 import { OpenaiService } from './openai/openai.service';
 import { OpenaiModule } from './openai/openai.module';
+import { JobAnalysisModule } from './job-analysis/job-analysis.module';
 
 @Module({
   imports: [
@@ -36,7 +37,9 @@ import { OpenaiModule } from './openai/openai.module';
 
     DocumentsModule,
 
-    OpenaiModule
+    OpenaiModule,
+
+    JobAnalysisModule
     
   ],
   controllers: [AppController],
