@@ -102,3 +102,20 @@ export const RequirementsEvaluationSchema = z.object({
         RequirementEvaluationSchema
     )
 });
+
+export const AnalysisIntentSchema = z.object({
+
+    intent: z.enum([
+        'match',
+        'gaps',
+        'strengths',
+        'interview'
+    ])
+
+});
+
+export const MATCH_SCORE = {
+    strong: 1,
+    partial: 0.5,
+    gap: 0
+} as const;
