@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export type RequirementImportance =
     | 'required'
     | 'preferred'
@@ -7,12 +9,6 @@ export type MatchLevel =
     | 'strong'
     | 'partial'
     | 'gap';
-
-export interface JobRequirement {
-    requirement: string;
-    category: string;
-    importance: RequirementImportance;
-}
 
 export interface ResumeEvidence {
     content: string;
@@ -25,19 +21,6 @@ export interface RequirementEvidence {
     requirement: string;
     evidence: ResumeEvidence[];
 }
-
-export interface RequirementEvaluation {
-    requirement: string;
-    importance: RequirementImportance;
-
-    match: MatchLevel;
-
-    explanation: string;
-
-    evidence: string[];
-}
-
-import { z } from 'zod';
 
 export const JobRequirementSchema = z.object({
     requirement: z.string().describe(
@@ -65,17 +48,12 @@ export const JobRequirementSchema = z.object({
     ])
 });
 
+export type JobRequirement =
+    z.infer<typeof JobRequirementSchema>;
+
 export const ExtractedRequirementsSchema = z.object({
     requirements: z.array(JobRequirementSchema)
 });
-
-export interface RequirementEvaluation {
-    requirement: string;
-    importance: RequirementImportance;
-    match: MatchLevel;
-    explanation: string;
-    evidence: string[];
-}
 
 export const RequirementEvaluationSchema = z.object({
     requirement: z.string(),
@@ -97,6 +75,9 @@ export const RequirementEvaluationSchema = z.object({
     evidence: z.array(z.string())
 });
 
+export type RequirementEvaluation =
+    z.infer<typeof RequirementEvaluationSchema>;
+
 export const RequirementsEvaluationSchema = z.object({
     evaluations: z.array(
         RequirementEvaluationSchema
@@ -104,15 +85,25 @@ export const RequirementsEvaluationSchema = z.object({
 });
 
 export const AnalysisIntentSchema = z.object({
-
     intent: z.enum([
         'match',
         'gaps',
         'strengths',
-        'interview'
+        'interview',
+        'unsupported'
     ])
-
 });
+
+export type AnalysisIntentResult =
+    z.infer<typeof AnalysisIntentSchema>;
+
+export const JobAnalysisValidationSchema = z.object({
+    valid: z.boolean(),
+    reason: z.string().nullable()
+});
+
+export type JobAnalysisValidation =
+    z.infer<typeof JobAnalysisValidationSchema>;
 
 export const MATCH_SCORE = {
     strong: 1,

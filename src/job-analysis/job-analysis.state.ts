@@ -53,7 +53,8 @@ export const AnalysisIntentSchema = z.enum([
     'match',
     'gaps',
     'strengths',
-    'interview'
+    'interview',
+    'unsupported'
 ]);
 
 export const JobAnalysisStateSchema = z.object({
@@ -61,6 +62,14 @@ export const JobAnalysisStateSchema = z.object({
     jobDescription: z.string(),
 
     question: z.string(),
+
+    requestValid: z
+        .boolean()
+        .optional(),
+
+    validationReason: z
+        .string()
+        .optional(),
 
     requirements: z
         .array(JobRequirementSchema)

@@ -2,7 +2,7 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { ChatOpenAI } from '@langchain/openai';
 import { Injectable } from '@nestjs/common';
 import { PostgresRetriever } from '../documents/retrievers/postgres.retriever';
-import { AnalysisIntentSchema, ExtractedRequirementsSchema, MATCH_SCORE, RequirementEvaluation, RequirementEvaluationSchema, RequirementEvidence } from './types/job-analysis.types';
+import { AnalysisIntentSchema, ExtractedRequirementsSchema, JobAnalysisValidationSchema, MATCH_SCORE, RequirementEvaluation, RequirementEvaluationSchema, RequirementEvidence } from './types/job-analysis.types';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { JobAnalysisStateType } from './job-analysis.state';
 import { DocumentsService } from '../documents/documents.service';
@@ -26,6 +26,82 @@ export class JobAnalysisNodesService {
             model: 'gpt-5.4-mini',
             apiKey: process.env.OPENAI_API_KEY
         });
+    }
+
+    async validateRequest(
+        state: JobAnalysisStateType
+    ) {
+
+        const prompt =
+            ChatPromptTemplate.fromMessages([
+                [
+                    'system',
+                    `
+    You are validating a request for a job-analysis system.
+
+    The system compares a candidate's professional evidence against a job opportunity.
+
+    A request is VALID only when BOTH conditions are satisfied:
+
+    1. JOB DESCRIPTION
+    - The provided text describes a job, vacancy, professional role, hiring opportunity, or professional requirements.
+
+    2. USER QUESTION
+    - The question is meaningfully related to analyzing the candidate against that job.
+
+    Valid questions may concern:
+    - overall job match
+    - strengths
+    - gaps
+    - missing requirements
+    - qualifications
+    - interview preparation
+    - required skills
+    - candidate evidence
+    - transferable experience
+
+    INVALID examples include:
+    - general knowledge questions
+    - unrelated programming questions
+    - entertainment, sports, politics, weather, or other unrelated topics
+    - requests unrelated to evaluating a candidate against the supplied job
+
+    Important:
+    - Do NOT answer the user's question.
+    - Do NOT analyze candidate qualifications.
+    - Only determine whether this request belongs to the job-analysis workflow.
+                    `
+                ],
+                [
+                    'human',
+                    `
+    JOB DESCRIPTION:
+
+    {jobDescription}
+
+    USER QUESTION:
+
+    {question}
+                    `
+                ]
+            ]);
+
+        const structuredModel =
+            this.model.withStructuredOutput(
+                JobAnalysisValidationSchema
+            );
+
+        const result = await prompt
+            .pipe(structuredModel)
+            .invoke({
+                jobDescription: state.jobDescription,
+                question: state.question
+            });
+
+        return {
+            requestValid: result.valid,
+            validationReason: result.reason ?? undefined
+        };
     }
 
     async extractRequirements(
@@ -55,6 +131,13 @@ export class JobAnalysisNodesService {
             - LangGraph
         - Phrase requirements consistently and concisely.
         - Keep requirements specific enough that they can later be searched against a professional resume.
+
+        REQUIREMENT DECOMPOSITION:
+
+        - Prefer atomic capabilities over compound role titles.
+        - When a role title combines seniority, domain, and architecture (for example "Senior AI Software Architect"), decompose it into independently evaluable capabilities when supported by the job description.
+        - Do not create both a compound role requirement and its component requirements, as this would double-count the same expectation.
+        - Preserve domain specialization when it is explicitly meaningful.
 
         ROLE AND SENIORITY RULES:
         - A job title alone is not automatically a separate requirement.
@@ -299,6 +382,11 @@ export class JobAnalysisNodesService {
         "What should I prepare for the interview?"
         "What might they ask me?"
         "What should I emphasize during the interview?"
+
+        UNSUPPORTED
+        - Questions that cannot be answered from the current job analysis capabilities.
+        - Questions unrelated to match, gaps, strengths, or interview preparation.
+        - Do not force an unrelated question into another category.
 
         - Classify based on the user's primary intent when a question could fit more than one category.
 
@@ -706,6 +794,24 @@ export class JobAnalysisNodesService {
 
         return {
             answer
+        };
+    }
+
+    async generateUnsupportedAnswer(
+        state: JobAnalysisStateType
+    ) {
+
+        if (state.requestValid === false) {
+            return {
+                answer:
+                    state.validationReason ??
+                    'This request is not related to the job-analysis workflow.'
+            };
+        }
+
+        return {
+            answer:
+                'This question is related to job analysis, but it is not currently supported by this workflow.'
         };
     }
     

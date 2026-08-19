@@ -21,6 +21,11 @@ export class JobAnalysisGraph {
         const graph = new StateGraph(JobAnalysisState)
 
             .addNode(
+                'validateRequest',
+                this.nodes.validateRequest.bind(this.nodes)
+            )
+
+            .addNode(
                 'extractRequirements',
                 this.nodes.extractRequirements.bind(this.nodes)
             )
@@ -60,9 +65,26 @@ export class JobAnalysisGraph {
                 this.nodes.generateInterviewAnswer.bind(this.nodes)
             )
 
+            .addNode(
+                'generateUnsupportedAnswer',
+                this.nodes.generateUnsupportedAnswer.bind(this.nodes)
+            )
+
             .addEdge(
                 START,
-                'extractRequirements'
+                'validateRequest'
+            )
+
+            .addConditionalEdges(
+                'validateRequest',
+                (state) =>
+                    state.requestValid
+                        ? 'valid'
+                        : 'invalid',
+                {
+                    valid: 'extractRequirements',
+                    invalid: 'generateUnsupportedAnswer'
+                }
             )
 
             .addEdge(
@@ -87,7 +109,8 @@ export class JobAnalysisGraph {
                     match: 'generateMatchAnswer',
                     gaps: 'generateGapsAnswer',
                     strengths: 'generateStrengthsAnswer',
-                    interview: 'generateInterviewAnswer'
+                    interview: 'generateInterviewAnswer',
+                    unsupported: 'generateUnsupportedAnswer',
                 }
             )
 
@@ -110,6 +133,11 @@ export class JobAnalysisGraph {
                 'generateInterviewAnswer',
                 END
             )
+
+            .addEdge(
+                'generateUnsupportedAnswer',
+                END
+            );
 
             
 
